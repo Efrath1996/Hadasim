@@ -1,0 +1,33 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+ex4/newProject/node_modules
+
+# SERVER:
+
+ex4/newProject/server/.env
+ex4/newProject/server/node_modules
+
+
+# CLIENT
+
+# dependencies
+ex4/newProject/client/node_modules
+ex4/newProject/client/.pnp
+ex4/newProject/client/.pnp.js
+
+# testing
+ex4/newProject/client/coverage
+
+# production
+ex4/newProject/client/build
+
+# misc
+ex4/newProject/client/.DS_Store
+ex4/newProject/client/.env.local
+ex4/newProject/client/.env.development.local
+ex4/newProject/client/.env.test.local
+ex4/newProject/client/.env.production.local
+
+ex4/newProject/client/npm-debug.log*
+ex4/newProject/client/yarn-debug.log*
+ex4/newProject/client/yarn-error.log*
