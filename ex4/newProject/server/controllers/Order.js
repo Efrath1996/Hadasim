@@ -39,7 +39,7 @@ export const createOrder = async (req, res) => {
 
 export const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find().populate('supplierId');
+    const orders = await Order.find().populate('supplierId').sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {
     res.status(500).json({ error: 'Get orders failed' });
@@ -84,7 +84,7 @@ export const getOrdersBySupplier = async (req, res) => {
     console.log("decoded ", decoded);
     console.log("token ", token);
     console.log("supplierId ", supplierId);
-    const orders = await Order.find({ supplierId: supplierId });
+    const orders = await Order.find({ supplierId: supplierId }).sort({ createdAt: -1 });
     console.log(orders);
    res.status(200).json(orders);
   } catch (error) {

@@ -1,4 +1,5 @@
 
+/* Create Person table*/
 CREATE TABLE Person (
     Person_Id INT PRIMARY KEY,
     First_Name VARCHAR(50),
@@ -12,7 +13,7 @@ CREATE TABLE Person (
     FOREIGN KEY (Spouse_Id) REFERENCES Person(Person_Id)
 );
 
-
+/*Insert values into Person Table*/
 INSERT INTO Person (Person_Id, First_Name, Last_Name, Gender, Father_Id, Mother_Id, Spouse_Id)
 VALUES (1, 'Ilan', 'Hadad', 'Male', NULL, NULL, 2);
 
@@ -31,13 +32,14 @@ VALUES (5, 'Lior', 'Rahmimov', 'Male', NULL, NULL, NULL);
 INSERT INTO Person (Person_Id, First_Name, Last_Name, Gender, Father_Id, Mother_Id, Spouse_Id)
 VALUES (6, 'Efrat', 'Rahmimov', 'Female', 1, 2, 5);
 
-
+/* Create FamilyRelations table*/
 CREATE TABLE FamilyRelations (
     Person_Id INT,
     Relative_Id INT,
     Connection_Type VARCHAR(20)
 );
 
+/*Insert values into FamilyRelations Table according exe1*/
 INSERT INTO FamilyRelations (Person_Id, Relative_Id, Connection_Type)
 SELECT Person_Id, Father_Id, 'Father'
 FROM Person
@@ -48,14 +50,14 @@ SELECT Person_Id, Mother_Id, 'Mother'
 FROM Person
 WHERE Mother_Id IS NOT NULL;
 
-INSERT INTO FamilyRelations (Person_Id, Relative_Id, Connection_Type)
+/*INSERT INTO FamilyRelations (Person_Id, Relative_Id, Connection_Type)
 SELECT Person_Id, Spouse_Id,
        CASE Gender
          WHEN 'Male' THEN 'Wife'
          WHEN 'Female' THEN 'Husband'
        END AS Connection_Type
 FROM Person
-WHERE Spouse_Id IS NOT NULL;
+WHERE Spouse_Id IS NOT NULL;*/
 
 INSERT INTO FamilyRelations (Person_Id, Relative_Id, Connection_Type)
 SELECT Father_Id, Person_Id,
@@ -90,7 +92,7 @@ JOIN Person AS b
     OR (a.Mother_Id IS NOT NULL AND a.Mother_Id = b.Mother_Id)
  );
 
-
+/*Update fill of spouses FamilyRelations Table according exe2*/
 UPDATE Person
 SET Spouse_Id = (
   SELECT a.Person_Id
@@ -99,3 +101,13 @@ SET Spouse_Id = (
   LIMIT 1
 )
 WHERE Spouse_Id IS NULL;
+
+/*After fill of spouses - Insert husband/wife relation into FamilyRelations Table according exe2*/
+INSERT INTO FamilyRelations (Person_Id, Relative_Id, Connection_Type)
+SELECT Person_Id, Spouse_Id,
+       CASE Gender
+         WHEN 'Male' THEN 'Wife'
+         WHEN 'Female' THEN 'Husband'
+       END AS Connection_Type
+FROM Person
+WHERE Spouse_Id IS NOT NULL;

@@ -1,86 +1,77 @@
 import pandas as pd
 import os
-import pandas as pd
-
 
 def get_ave_file_by_hour(fileName):
-#1 check data
+#1 Check data
+    print("ex 1")
     df = pd.read_csv(f'{fileName}.csv')
     df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce', dayfirst=True)
     df['value'] = pd.to_numeric(df['value'], errors='coerce')
-    print(df[df['value'].isna()]) # nan val
-
-    col_sums_with_nan = df.isna().sum().sum()
-    if col_sums_with_nan > 0:
+    if df.isna().sum().sum() > 0:
         df.dropna(inplace=True)
-    #print(df)
-
-
-    col_sums_with_dup = df.duplicated().sum()
-    if col_sums_with_dup > 0:
+    if df.duplicated().sum() > 0:
         df.drop_duplicates(inplace=True)
-    #print(df)
 
-    #2 return ave hour in file 
-    output_folder = 'split_csv'
-    lines_in_file = 100000
-    os.makedirs(output_folder, exist_ok=True)
-    for index, i in enumerate(range(0, len(df), lines_in_file), start=1):
-        part = df.iloc[i:i+lines_in_file]
-        part.to_csv(f'{output_folder}/time_series_{index}.csv')
+#2 Calculate hourly averages
+    print("ex 2")
+    df['datebyhour'] = df['timestamp'].dt.floor('h')
+    avg_all = df.groupby('datebyhour')['value'].mean()
+    print(avg_all)
 
-    all_parts = []
-    for filename in os.listdir(output_folder):
-        file_path = os.path.join(output_folder, filename)
-        part_df = pd.read_csv(file_path)
-        part_df['timestamp'] = pd.to_datetime(part_df['timestamp'])
-        part_df['datebyhour'] = part_df['timestamp'].dt.floor('h')
-        hourly_avg = part_df.groupby('datebyhour')['value'].mean()
-        for datebyhour, val in hourly_avg.items():
-            all_parts.append({'datebyhour': datebyhour, 'value': val})
+#3 Split file by day, calculate hourly averages per file, and merge
+    print("ex 3")
+    df['date_only'] = df['timestamp'].dt.date
+    os.makedirs('split_csv', exist_ok=True)
+    for d in df['date_only'].unique():
+        day_data = df[df['date_only'] == d].drop(columns=['date_only', 'datebyhour'])
+        day_data.to_csv(f'split_csv/time_series_{d}.csv', index=False)
 
-    if all_parts:
-        all_parts_df = pd.DataFrame(all_parts)
-        final_time_series = all_parts_df.groupby('datebyhour')['value'].mean()
+    all_avgs = []
+    for file in os.listdir('split_csv'):
+        part = pd.read_csv(os.path.join('split_csv', file))
+        part['timestamp'] = pd.to_datetime(part['timestamp'])
+        part['datebyhour'] = part['timestamp'].dt.floor('h')
+        avg_part = part.groupby('datebyhour')['value'].mean()
+        for idx, val in avg_part.items():
+            all_avgs.append({'datebyhour': idx, 'value': val})
 
-        print(final_time_series)
-        final_time_series.to_csv('final_time_series.csv')
+    all_avgs_df = pd.DataFrame(all_avgs)
+    final_avg = all_avgs_df.groupby('datebyhour')['value'].mean()
+    print(final_avg)
+    final_avg.to_csv('final_time_series.csv')
 
+#4 Streaming data
+    print("ex 4")
+    hourly_sums = {}
+    hourly_counts = {}
+    hourly_averages = {}
 
-    #3 return ave hour in data 
-    data = [
+    streaming_data = [
         {'timestamp': '2025-06-10 06:15:00', 'value': 10.3},
         {'timestamp': '2025-06-10 07:10:00', 'value': 12.1},
         {'timestamp': '2025-06-10 06:45:00', 'value': 7.9},
     ]
 
-    lines = 2  
-    all_parts1 = []
-
-    df = pd.DataFrame(data)
-    df['timestamp'] = pd.to_datetime(df['timestamp'])
-
-    for i in range(0, len(df), lines):
-        part = df.iloc[i:i+lines].copy()
-        part['datebyhour'] = part['timestamp'].dt.floor('h')  
-        hourly_avg = part.groupby('datebyhour')['value'].mean()
-        for datebyhour, val in hourly_avg.items():
-            all_parts1.append({'datebyhour': datebyhour, 'value': val})
-
-    combined_df = pd.DataFrame(all_parts1)
-    final_all_parts1 = combined_df.groupby('datebyhour')['value'].mean()
-
-    print(final_all_parts1)
-
-#4
-    df = pd.read_parquet(f'{fileName}.parquet')
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print(df)
-    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-    print(df[['timestamp', 'mean_value']])
+    for record in streaming_data:
+        hour = pd.to_datetime(record['timestamp']).floor('h')
+        val = record['value']
+        if hour not in hourly_sums:
+            hourly_sums[hour] = 0
+            hourly_counts[hour] = 0
+        hourly_sums[hour] += val
+        hourly_counts[hour] += 1
+        avg = hourly_sums[hour] / hourly_counts[hour]
+        hourly_averages[hour] = avg
+        print(f"{hour}: {avg}")
     
-#פרקט תומך בדחיסה יעילה של נתונים, מה שמפחית את נפח האחסון הנדרש ומגדיל את מהירות העבודה.
+    for hour, avg in hourly_averages.items():
+        print(f"{hour}: {avg}")
+        
 
-#main
-fileName = 'time_series'
-get_ave_file_by_hour(fileName)
+#5 Parquet file
+    print("ex 5")
+    df_parquet = pd.read_parquet(f'{fileName}.parquet')
+    df_selected = df_parquet[['timestamp', 'mean_value']]
+    print(df_selected.head())
+
+get_ave_file_by_hour('time_series')

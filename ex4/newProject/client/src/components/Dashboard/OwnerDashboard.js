@@ -11,8 +11,7 @@ const OwnerDashboard = () => {
   const [quantities, setQuantities] = useState({});
   const [errorMessages, setErrorMessages] = useState({});
   const [statusFilter, setStatusFilter] = useState('All');
-  const [sortColumn, setSortColumn] = useState(null);
-  const [sortDirection, setSortDirection] = useState('asc');
+  const [productFilter, setProductFilter] = useState('All');
 
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user'));
@@ -104,6 +103,8 @@ const OwnerDashboard = () => {
       console.error("Update order status failed", error);
     }
   };
+  
+  const uniqueProductNames = ['All', ...Array.from(new Set(ordersList.map(order => order.product.name))) ];
 
   const getRowClassByStatus = (status) => {
     switch (status) {
@@ -125,6 +126,7 @@ const OwnerDashboard = () => {
   const suppliersRows = [];
   suppliersList.forEach((supplier) =>
     supplier.products.forEach((product, index) => {
+      if (productFilter === 'All' || product.name === productFilter) {
       const key = `${supplier._id}:${index}`;
       suppliersRows.push (
         <tr key={key}>
@@ -149,7 +151,7 @@ const OwnerDashboard = () => {
           </td>
         </tr>
       );
-    })
+    }})
   )
 
 
@@ -205,25 +207,32 @@ const OwnerDashboard = () => {
         suppliersList.length === 0 ? (
           <p className="text-center text-muted">No suppliers found</p>
         ) : (
-          <div className="table-responsive">
-            <table className={`table table-bordered ${style.suppliersTable}`}>
-              <thead className="table-light">
-                <tr>
-                  <th>Company Name</th>
-                  <th>Contact Name</th>
-                  <th>Email</th>
-                  <th>Product</th>
-                  <th>Price</th>
-                  <th>Min Quantity</th>
-                  <th>Order Quantity</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
+          <div>
+            <div className="mb-3 text-end">
+              <select className="form-select w-auto d-inline-block" value={productFilter} onChange={e => setProductFilter(e.target.value)}>
+              {uniqueProductNames.map(name => ( <option key={name} value={name}>{name}</option> ))}
+              </select>
+            </div>
+            <div className="table-responsive">
+              <table className={`table table-bordered ${style.suppliersTable}`}>
+                <thead className="table-light">
+                  <tr>
+                    <th>Company Name</th>
+                    <th>Contact Name</th>
+                    <th>Email</th>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Min Quantity</th>
+                    <th>Order Quantity</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {suppliersRows}
-              </tbody>
-            </table>
-          </div>
+                </tbody>
+              </table>
+            </div>
+        </div>
         )
       ) : (  //ordersTab active
         <div>

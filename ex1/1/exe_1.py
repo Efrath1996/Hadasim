@@ -2,6 +2,7 @@ import os
 
 #1
 def split_log_file(input_file, lines_in_file=100000, folder='split_logs'):
+    print("ex 1")
     file_count = 0
     line_count = 0
     output_file = None
@@ -18,10 +19,9 @@ def split_log_file(input_file, lines_in_file=100000, folder='split_logs'):
     if output_file:
         output_file.close()
 
-
-
 #2
 def get_errors_count_for_file(folder_path):
+    print("ex 2")
     file_names = sorted([f for f in os.listdir(folder_path)])
     #print(file_names)
     index = 1 
@@ -46,6 +46,7 @@ def get_errors_count_for_file(folder_path):
 
 #3
 def get_errors_count_for_folder(all_counts):
+    print("ex 3")
     main_error_counts = {}
     for key, value in all_counts.items():
         for code in value:
@@ -57,17 +58,19 @@ def get_errors_count_for_folder(all_counts):
     #print(main_error_counts)
     return main_error_counts
 
-
 #4
 def get_top_n_errors_counts(main_error_counts, n):
+    print("ex 4")
     sorted_main_error_counts = dict(sorted(main_error_counts.items(), key=lambda item: item[1], reverse=True)) #item[1] = val
     #print(sorted_main_error_counts)
     top_n = list(sorted_main_error_counts.items())[:n]
     return top_n
 
-
 #5
-#nlogn+n
+# N-number of lines in file
+# E-number of errors code
+# if E<<N then O(N)
+# if E=N then O(NLOGN)
 
 #main
 def get_top_n_errors_and_counts_from_file(file ,n):
